@@ -1,0 +1,195 @@
+{% extends 'expenses/base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    /* Dashboard specific styles */
+    .dashboard-body { background: #f8fafc; font-family: "Poppins", sans-serif; color: #1e293b; padding-top: 20px; padding-bottom: 40px; }
+    .container { width: 95%; max-width: 1100px; margin: 0 auto; }
+    h2.dash-title { text-align: center; margin: 10px 0 25px 0; color: #0f172a; font-weight: 600; font-size: 28px; }
+
+    /* Filter Section */
+    .filter-box { text-align: center; margin-bottom: 20px; }
+    .filter-box select { padding: 8px 15px; border-radius: 10px; border: 1px solid #e2e8f0; background: white; outline: none; cursor: pointer; font-family: inherit; }
+
+    /* Tips Section */
+    .tip-card { background: #fff; border-left: 5px solid #0c4a6e; padding: 15px 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 15px; margin-bottom: 25px; }
+    .tip-list { margin: 0; padding: 0; list-style: none; font-size: 14px; color: #475569; font-weight: 500; }
+
+    /* Modern Tabs Navigation */
+    .tab-nav { display: flex; justify-content: center; gap: 8px; margin-bottom: 25px; background: #fff; padding: 8px; border-radius: 50px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); width: fit-content; margin-left: auto; margin-right: auto; }
+    .tab-link { padding: 10px 22px; border-radius: 30px; cursor: pointer; font-size: 13px; font-weight: 600; color: #64748b; border: none; background: none; transition: 0.3s; white-space: nowrap; }
+    .tab-link.active { background: #1a73e8; color: white; box-shadow: 0 4px 12px rgba(26,115,232,0.2); }
+
+    /* Layout Content */
+    .tab-pane { display: none; animation: fadeIn 0.4s ease; }
+    .tab-pane.active { display: block; }
+    .visual-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+    
+    .box { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow: hidden; }
+    .chart-container { height: 260px; width: 100%; position: relative; margin: 0 auto; }
+    
+    h3 { font-size: 15px; color: #1e293b; margin: 0 0 15px 0; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; text-align: center; font-weight: 600; }
+
+    /* Heatmap Styling */
+    .heatmap { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+    .day { aspect-ratio: 1; border-radius: 6px; font-size: 10px; display: flex; align-items: center; justify-content: center; font-weight: 600; }
+    .empty { background: #f1f5f9; color: #cbd5e1; } 
+    .low { background: #dcfce7; color: #166534; } 
+    .medium { background: #fef9c3; color: #854d0e; } 
+    .high { background: #fee2e2; color: #991b1b; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    @media (max-width: 850px) { .visual-grid { grid-template-columns: 1fr; } }
+</style>
+
+<div class="dashboard-body">
+    <div class="container">
+        <h2 class="dash-title">Financial Insights 📈</h2>
+
+        <div class="filter-box">
+            <form method="GET">
+                <select name="month" onchange="this.form.submit()">
+                    {% for num, name in months_choices %}
+                    <option value="{{ num }}" {% if num == selected_month %}selected{% endif %}>{{ name }}</option>
+                    {% endfor %}
+                </select>
+                <select name="year" onchange="this.form.submit()">
+                    {% for y in years_choices %}
+                    <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>{{ y }}</option>
+                    {% endfor %}
+                </select>
+            </form>
+        </div>
+
+        <div class="tip-card">
+            <span style="font-size: 22px;">💡</span>
+            <ul class="tip-list">
+                {% for tip in personalized_tips %}
+                <li>{{ tip }}</li>
+                {% empty %}
+                <li>Tracking is active. Have a great day!</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="tab-nav">
+            <button class="tab-link active" onclick="switchTab(event, 'patterns')">📅 Patterns</button>
+            <button class="tab-link" onclick="switchTab(event, 'charts')">📊 Analytics</button>
+            <button class="tab-link" onclick="switchTab(event, 'weekly')">🗓️ Weekly Breakdown</button>
+        </div>
+
+        <div id="patterns" class="tab-pane active">
+            <div class="visual-grid">
+                <div class="box">
+                    <h3>Monthly Heatmap ({{ month_name }})</h3>
+                    <div class="heatmap">
+                        {% for d in heatmap_data %}
+                        <div class="day {{ d.color }}" title="Spent: {{ user_symbol }}{{ d.total }}">{{ d.day }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="box">
+                    <h3>Budget Limits ({{ user_symbol }})</h3>
+                    {% for b in budget_progress %}
+                    <div style="margin-bottom:15px;">
+                        <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:5px; font-weight:600;">
+                            <span>{{ b.category }}</span>
+                            <span>{{ user_symbol }}{{ b.spent }} / {{ user_symbol }}{{ b.limit }}</span>
+                        </div>
+                        <div style="height:7px; background:#f1f5f9; border-radius:10px; overflow:hidden;">
+                            <div style="width:{{ b.percent }}%; height:100%; background:{% if b.color == 'danger' %}#ef4444{% else %}#22c55e{% endif %}; border-radius:10px;"></div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p style="text-align:center; color:#94a3b8; padding-top:40px; font-size:13px;">No budget set for this month.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div id="charts" class="tab-pane">
+            <div class="visual-grid">
+                <div class="box"><h3>Spending Categories ({{ user_symbol }})</h3><div class="chart-container"><canvas id="pChart"></canvas></div></div>
+                <div class="box"><h3>Daily Trend ({{ user_symbol }})</h3><div class="chart-container"><canvas id="lChart"></canvas></div></div>
+            </div>
+        </div>
+
+        <div id="weekly" class="tab-pane">
+            <div class="visual-grid">
+                <div class="box" style="text-align:center;">
+                    <h3>Performance</h3>
+                    <p style="font-size: 12px; color: #64748b;">THIS WEEK: <b>{{ user_symbol }}{{ this_week_total }}</b></p>
+                    <div style="padding: 10px; border-radius: 10px; background: {% if weekly_status == 'up' %}#fff1f2{% else %}#f0fdf4{% endif %}; color: {% if weekly_status == 'up' %}#be123c{% else %}#15803d{% endif %};">
+                        {% if weekly_status == 'up' %}
+                            📈 Up by {{ user_symbol }}{{ weekly_diff }}
+                        {% else %}
+                            📉 Down by {{ user_symbol }}{{ weekly_diff }}
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="box"><h3>7-Day Breakdown ({{ user_symbol }})</h3><div class="chart-container"><canvas id="wChart"></canvas></div></div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    function switchTab(e, id) {
+        document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.tab-link').forEach(l => l.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        e.target.classList.add('active');
+    }
+
+    Chart.defaults.font.family = 'Poppins';
+    
+    // Doughnut Chart
+    new Chart(document.getElementById("pChart"), { 
+        type: 'doughnut', 
+        data: { 
+            labels: {{ categories_json|safe }}, 
+            datasets: [{ 
+                data: {{ totals_json|safe }}, 
+                backgroundColor: ["#0c4a6e", "#38bdf8", "#fbbf24", "#f87171", "#a78bfa"] 
+            }] 
+        }, 
+        options: { maintainAspectRatio: false } 
+    });
+
+    // Line Chart
+    new Chart(document.getElementById("lChart"), { 
+        type: 'line', 
+        data: { 
+            labels: {{ dates_json|safe }}, 
+            datasets: [{ 
+                label: 'Spent ({{ user_symbol }})', 
+                data: {{ amount_json|safe }}, 
+                borderColor: '#0c4a6e', 
+                fill: true, 
+                tension: 0.3 
+            }] 
+        }, 
+        options: { maintainAspectRatio: false } 
+    });
+
+    // Weekly Bar Chart
+    new Chart(document.getElementById("wChart"), { 
+        type: 'bar', 
+        data: { 
+            labels: {{ week_days_json|safe }}, 
+            datasets: [{ 
+                label: 'Daily Total ({{ user_symbol }})',
+                data: {{ week_amounts_json|safe }}, 
+                backgroundColor: '#38bdf8' 
+            }] 
+        }, 
+        options: { 
+            indexAxis: 'y', 
+            maintainAspectRatio: false 
+        } 
+    });
+</script>
+{% endblock %}

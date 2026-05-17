@@ -1,0 +1,129 @@
+{% extends 'expenses/base.html' %}
+
+{% block content %}
+<!-- Google Font link for Dancing Script (agar base mein na ho) -->
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&display=swap" rel="stylesheet">
+
+<div style="max-width: 1000px; margin: 30px auto; padding: 0 20px;">
+    
+    <!-- Top Summary Card -->
+    <div style="background: linear-gradient(135deg, #be185d 0%, #9d174d 100%); padding: 25px; border-radius: 20px; color: white; margin-bottom: 30px; box-shadow: 0 10px 20px rgba(190, 24, 93, 0.2);">
+        <!-- Sub-title in Times New Roman -->
+        <h4 style="margin: 0; opacity: 0.9; font-weight: 400; font-family: 'Times New Roman', Times, serif;">Total Budget Limit ({{ now|date:"F Y" }})</h4>
+        <!-- Main Amount in Dancing Script -->
+        <h1 style="margin: 10px 0 0 0; font-size: 42px; font-family: 'Dancing Script', cursive;">₹{{ total_limit }}</h1>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 30px;">
+        
+        <!-- Left Column: Add/Update Form -->
+        <div>
+            <div style="background: white; padding: 25px; border-radius: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border: 1px solid #f1f5f9;">
+                <!-- Heading in Dancing Script -->
+                <h3 style="color: #be185d; margin-top: 0; font-family: 'Dancing Script', cursive; font-size: 28px;">
+                    <i class="fa-solid fa-plus-circle"></i> Set Limit
+                </h3>
+                <form method="POST">
+                    {% csrf_token %}
+                    <div style="margin-bottom: 15px;">
+                        <!-- Label in Times New Roman -->
+                        <label style="display: block; font-size: 14px; color: #64748b; margin-bottom: 5px; font-family: 'Times New Roman', Times, serif; font-weight: bold;">Category</label>
+                        {{ form.category }}
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                        <!-- Label in Times New Roman -->
+                        <label style="display: block; font-size: 14px; color: #64748b; margin-bottom: 5px; font-family: 'Times New Roman', Times, serif; font-weight: bold;">Monthly Limit (₹)</label>
+                        {{ form.limit_amount }}
+                    </div>
+                    <button type="submit" style="width: 100%; background: #be185d; color: white; border: none; padding: 12px; border-radius: 10px; font-weight: 600; cursor: pointer; transition: 0.3s; font-family: 'Inter', sans-serif;">
+                        Apply Budget
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Right Column: List of Budgets -->
+        <div>
+            <div style="background: white; border-radius: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #f1f5f9;">
+                <div style="padding: 20px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center;">
+                    <!-- Heading in Dancing Script -->
+                    <h3 style="margin: 0; font-size: 24px; font-family: 'Dancing Script', cursive; color: var(--text-dark);">Active Categories</h3>
+                    <!-- Badge in Times New Roman -->
+                    <span style="background: #fdf2f8; color: #be185d; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; font-family: 'Times New Roman', Times, serif;">{{ active_budgets.count }} Categories</span>
+                </div>
+                
+                <div id="budget-list" style="max-height: 400px; overflow-y: auto;">
+                    {% for b in active_budgets %}
+                    <div id="row-{{ b.id }}" style="padding: 15px 20px; border-bottom: 1px solid #f8fafc; display: flex; justify-content: space-between; align-items: center; transition: 0.3s;">
+                        <div>
+                            <!-- Main Category in Dancing Script -->
+                            <div style="font-weight: 700; color: var(--text-dark); font-family: 'Dancing Script', cursive; font-size: 20px;">{{ b.category }}</div>
+                            <!-- Detail in Times New Roman -->
+                            <div style="font-size: 14px; color: #94a3b8; font-family: 'Times New Roman', Times, serif;">Monthly Limit: ₹{{ b.limit_amount }}</div>
+                        </div>
+                        <div style="display: flex; gap: 15px; align-items: center;">
+                            <button class="delete-btn" data-id="{{ b.id }}" style="background: #fee2e2; color: #ef4444; border: none; width: 35px; height: 35px; border-radius: 8px; cursor: pointer; transition: 0.2s;">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div style="padding: 40px; text-align: center; color: #94a3b8; font-family: 'Times New Roman', Times, serif;">
+                        <i class="fa-solid fa-folder-open" style="font-size: 30px; margin-bottom: 10px; display: block;"></i>
+                        No budgets set yet.
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).on('click', '.delete-btn', function(){
+    const b_id = $(this).data('id');
+    const cardRow = $(`#row-${b_id}`);
+
+    Swal.fire({
+        title: '<span style="font-family: \'Times New Roman\', serif;">Remove Budget?</span>',
+        text: "You will no longer get alerts for this category.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#be185d',
+        cancelButtonColor: '#94a3b8',
+        confirmButtonText: 'Yes, Delete'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: "{% url 'delete_budget' %}",
+                type: "POST",
+                data: {
+                    'id': b_id,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function(response){
+                    cardRow.css('background', '#fff1f2').fadeOut(500, function(){
+                        $(this).remove();
+                    });
+                }
+            });
+        }
+    });
+});
+</script>
+
+<style>
+    input, select {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        font-family: 'Inter', sans-serif;
+        outline: none;
+    }
+    input:focus, select:focus {
+        border-color: #be185d;
+        box-shadow: 0 0 0 3px rgba(190, 24, 93, 0.1);
+    }
+</style>
+{% endblock %}

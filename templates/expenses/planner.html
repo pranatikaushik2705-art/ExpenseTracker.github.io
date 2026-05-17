@@ -1,0 +1,213 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Budget Planner - Expense Tracker</title>
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body { 
+            background: radial-gradient(circle at top, #fdf2f8, #fbcfe8, #f9a8d4); 
+            font-family: 'Inter', sans-serif; 
+            padding: 40px 20px; 
+            color: #334155; 
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .planner-card { 
+            max-width: 500px; 
+            width: 100%;
+            background: white; 
+            padding: 40px 30px; 
+            border-radius: 25px; 
+            box-shadow: 0 15px 35px rgba(190, 24, 93, 0.15); 
+            border: 1px solid #fbcfe8;
+        }
+
+        h2 { 
+            text-align: center; 
+            color: #be185d; 
+            margin-bottom: 30px; 
+            font-family: 'Dancing Script', cursive; 
+            font-size: 42px;
+            margin-top: 0;
+        }
+
+        .input-group { 
+            margin-bottom: 25px; 
+            display: flex; 
+            flex-direction: column;
+            align-items: center;
+        }
+
+        label { 
+            display: block; 
+            font-size: 13px; 
+            font-weight: bold; 
+            margin-bottom: 10px; 
+            color: #64748b; 
+            font-family: 'Times New Roman', Times, serif;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        input { 
+            width: 90%; 
+            padding: 14px; 
+            border: 2px solid #fbcfe8; 
+            border-radius: 12px; 
+            font-size: 16px; 
+            outline: none; 
+            box-sizing: border-box; 
+            transition: 0.3s; 
+            background: #fff5f8;
+            color: #831843;
+            text-align: center;
+        }
+
+        input:focus { 
+            border-color: #be185d; 
+            background: white;
+            box-shadow: 0 0 10px rgba(190, 24, 93, 0.1);
+        }
+        
+        .result-grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 15px; 
+            margin-top: 10px; 
+        }
+
+        .res-box { 
+            padding: 18px 15px; 
+            border-radius: 18px; 
+            background: #fff; 
+            border: 1px solid #f1f5f9; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            text-align: center;
+            transition: 0.3s;
+        }
+
+        .res-box:hover {
+            transform: translateY(-3px);
+            border-color: #fbcfe8;
+        }
+
+        .res-label { 
+            font-size: 11px; 
+            color: #94a3b8; 
+            font-weight: bold; 
+            font-family: 'Times New Roman', Times, serif;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .res-value { 
+            font-size: 20px; 
+            font-weight: 700; 
+            color: #be185d; 
+        }
+        
+        .safe-zone { 
+            margin-top: 25px; 
+            padding: 18px; 
+            border-radius: 15px; 
+            text-align: center; 
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 16px;
+            border-width: 1px;
+            border-style: solid;
+        }
+
+        .btn-back { 
+            display: block; 
+            text-align: center; 
+            margin-top: 30px; 
+            color: #be185d; 
+            text-decoration: none; 
+            font-size: 15px; 
+            font-weight: 600;
+            font-family: 'Times New Roman', Times, serif;
+            transition: 0.3s;
+        }
+        .btn-back:hover { 
+            color: #831843; 
+            text-decoration: underline; 
+        }
+
+        /* Animation for values */
+        .res-value {
+            animation: fadeIn 0.8s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="planner-card">
+    <h2>Financial Planner 🧠</h2>
+    
+    <form method="GET">
+        <div class="input-group">
+            <label>Monthly Income (₹)</label>
+            <input type="number" name="income" value="{{ income }}" placeholder="e.g. 50000" onchange="this.form.submit()">
+        </div>
+    </form>
+
+    <div class="result-grid">
+        <!-- Total Spent -->
+        <div class="res-box">
+            <div class="res-label">Total Spent</div>
+            <div class="res-value" style="color: #ef4444;">₹{{ total_spent }}</div>
+        </div>
+        
+        <!-- Balance -->
+        <div class="res-box">
+            <div class="res-label">In Hand Balance</div>
+            <div class="res-value" style="color: #16a34a;">₹{{ balance }}</div>
+        </div>
+        
+        <!-- Savings Rate -->
+        <div class="res-box">
+            <div class="res-label">Savings Rate</div>
+            <div class="res-value" style="color: #be185d;">{{ savings_percent }}%</div>
+        </div>
+        
+        <!-- Daily Budget -->
+        <div class="res-box">
+            <div class="res-label">Daily Budget Left</div>
+            <div class="res-value" style="color: #be185d;">₹{{ daily_budget }}</div>
+        </div>
+    </div>
+
+    {% if income > 0 %}
+    <div class="safe-zone" style="background: {% if savings_percent > 20 %}#f0fdf4{% else %}#fff1f2{% endif %}; border-color: {% if savings_percent > 20 %}#bbf7d0{% else %}#fecdd3{% endif %};">
+        <div style="font-weight: 600; color: {% if savings_percent > 20 %}#15803d{% else %}#be123c{% endif %};">
+            {% if savings_percent > 20 %}
+                🌟 You're in the Safe Zone! Good job.
+            {% else %}
+                ⚠️ Warning: Low savings. Watch your spend!
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Updated link to Home (Logged In) Page -->
+    <a href="{% url 'home' %}" class="btn-back">← Back to Home</a>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,166 @@
+{% extends "expenses/base.html" %}
+{% block content %}
+
+<!-- Fonts & Icons -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+    :root {
+        --accent: {{ theme_color|safe|default:'#0f172a' }};
+        --text-main: #1e293b;
+        --text-muted: #64748b;
+        --bg-body: #f4f7fa;
+        --border-color: #e2e8f0;
+        --danger: #ef4444;
+        --success: #10b981;
+    }
+
+    body { background: var(--bg-body); font-family: 'Inter', sans-serif; color: var(--text-main); margin: 0; }
+
+    .dashboard-wrapper { display: grid; grid-template-columns: 360px 1fr; gap: 30px; padding: 30px; height: calc(100vh - 80px); }
+
+    /* Left Sidebar */
+    .control-sidebar { background: white; border-radius: 24px; padding: 35px; border: 1px solid var(--border-color); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.04); height: fit-content; }
+    .sidebar-header h2 { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 24px; margin-bottom: 5px; }
+    .mode-switch { display: flex; background: #f1f5f9; padding: 5px; border-radius: 14px; margin-bottom: 30px; }
+    .mode-btn { flex: 1; border: none; padding: 12px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--text-muted); background: transparent; transition: 0.3s; }
+    .mode-btn.active { background: white; color: var(--accent); box-shadow: 0 4px 10px rgba(0,0,0,0.06); }
+    .styled-input { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 20px; outline: none; }
+    .btn-save-goal { background: var(--accent); color: white; border: none; width: 100%; padding: 16px; border-radius: 12px; font-weight: 700; cursor: pointer; }
+
+    /* Gallery */
+    .gallery-area { overflow-y: auto; padding-right: 10px; }
+    .grid-layout { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; }
+
+    /* Asset Card */
+    .asset-card { background: white; border-radius: 20px; padding: 25px; border: 1px solid var(--border-color); position: relative; transition: 0.4s; }
+    .asset-card:hover { transform: translateY(-6px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05); }
+
+    .bin-trigger { position: absolute; top: 20px; right: 20px; background: #fff1f2; color: #f43f5e; border: none; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+    .bin-trigger:hover { background: #f43f5e; color: white; }
+
+    .asset-name { font-weight: 700; font-size: 18px; color: #0f172a; font-family: 'Outfit', sans-serif; margin-bottom: 2px; }
+    .asset-price { font-weight: 800; font-size: 22px; color: var(--accent); margin-bottom: 20px; }
+
+    /* Progress UI */
+    .progress-bar-bg { height: 8px; background: #f1f5f9; border-radius: 10px; overflow: hidden; margin-bottom: 15px; }
+    .progress-bar-fill { height: 100%; border-radius: 10px; transition: width 1s ease-in-out; }
+
+    /* Advice Text Box */
+    .advice-container { padding-top: 5px; border-top: 1px solid #f1f5f9; margin-top: 5px; }
+    .advice-text { font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+
+    /* Modal Overlay */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; z-index: 9999; }
+    .modal-box { background: white; width: 90%; max-width: 400px; padding: 40px; border-radius: 28px; text-align: center; }
+    .btn-row { display: flex; gap: 12px; margin-top: 30px; }
+    .btn-base { padding: 14px 20px; border-radius: 14px; font-weight: 700; cursor: pointer; flex: 1; border: none; }
+    .btn-cancel { background: #f1f5f9; color: #475569; }
+    .btn-confirm-delete { background: var(--danger); color: white; }
+
+    .hidden { display: none; }
+</style>
+
+<div class="dashboard-wrapper">
+    
+    <!-- LEFT SIDEBAR -->
+    <div class="control-sidebar">
+        <div class="sidebar-header">
+            <h2>Add Goal</h2>
+            <p>Track your next purchase journey.</p>
+        </div>
+
+        <div class="mode-switch">
+            <button class="mode-btn active" id="mode-std" onclick="switchMode('normal')">Standard</button>
+            <button class="mode-btn" id="mode-ai" onclick="switchMode('ai')">AI Prediction</button>
+        </div>
+
+        <form action="{% url 'add_wish' %}" method="POST">
+            {% csrf_token %}
+            <input type="text" name="item_name" class="styled-input" placeholder="Item Name" required>
+            <div id="ai-input-group" class="hidden">
+                <input type="text" name="product_url" class="styled-input" placeholder="Paste product link here">
+            </div>
+            <input type="number" name="price" class="styled-input" placeholder="Price ({{ user_symbol }})" required>
+            <button type="submit" class="btn-save-goal">Create Strategy</button>
+        </form>
+    </div>
+
+    <!-- RIGHT GALLERY -->
+    <div class="gallery-area">
+        <h4 class="fw-bold mb-4" style="font-family: 'Outfit';">Your Wishlist</h4>
+        
+        <div class="grid-layout">
+            {% for item in wishlist_items %}
+            <div class="asset-card">
+                <button type="button" class="bin-trigger" onclick="openModal('{{ item.id }}')">
+                    <i class="fa-solid fa-trash-can"></i>
+                </button>
+
+                <div class="asset-name text-truncate">{{ item.item_name }}</div>
+                <div class="asset-price">{{ user_symbol }}{{ item.estimated_price }}</div>
+
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" 
+                         style="width: {{ item.progress_pct }}%; 
+                                background: {% if item.progress_pct >= 100 %}var(--success){% else %}var(--accent){% endif %};">
+                    </div>
+                </div>
+
+                <div class="advice-container">
+                    <div class="advice-text">
+                        {% if item.progress_pct >= 100 %}
+                            <span style="color: var(--success);">
+                                <i class="fa-solid fa-circle-check"></i> You can buy this now
+                            </span>
+                        {% else %}
+                            <span style="color: var(--text-muted);">
+                                <i class="fa-solid fa-calendar-day"></i> You can buy this in 
+                                <span style="color: var(--accent);">{{ item.months_needed }} months</span>
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODAL -->
+            <div id="modal-{{ item.id }}" class="modal-overlay" onclick="closeModal('{{ item.id }}')">
+                <div class="modal-box" onclick="event.stopPropagation()">
+                    <div style="font-size: 40px; margin-bottom: 15px;">🗑️</div>
+                    <h3 style="font-family: 'Outfit'; font-weight: 700;">Remove Goal?</h3>
+                    <p style="color: var(--text-muted); font-size: 14px;">Removing <b>{{ item.item_name }}</b> will stop tracking its savings progress.</p>
+                    <div class="btn-row">
+                        <button type="button" class="btn-base btn-cancel" onclick="closeModal('{{ item.id }}')">Cancel</button>
+                        <form action="{% url 'delete_wishlist_item' %}" method="POST" style="flex: 1.2; display: flex;">
+                            {% csrf_token %}
+                            <input type="hidden" name="item_id" value="{{ item.id }}">
+                            <button type="submit" class="btn-base btn-confirm-delete">Confirm Delete</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div style="grid-column: 1/-1; text-align: center; padding: 100px 20px; color: var(--text-muted);">
+                <i class="fa-solid fa-box-open" style="font-size: 40px; margin-bottom: 20px; opacity: 0.3;"></i>
+                <p>Your wishlist is empty. Start adding some goals!</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+    function switchMode(mode) {
+        const aiGroup = document.getElementById('ai-input-group');
+        const btnStd = document.getElementById('mode-std');
+        const btnAi = document.getElementById('mode-ai');
+        if(mode === 'ai') { aiGroup.classList.remove('hidden'); btnAi.classList.add('active'); btnStd.classList.remove('active'); }
+        else { aiGroup.classList.add('hidden'); btnStd.classList.add('active'); btnAi.classList.remove('active'); }
+    }
+
+    function openModal(id) { document.getElementById('modal-' + id).style.display = 'flex'; document.body.style.overflow = 'hidden'; }
+    function closeModal(id) { document.getElementById('modal-' + id).style.display = 'none'; document.body.style.overflow = 'auto'; }
+</script>
+
+{% endblock %}

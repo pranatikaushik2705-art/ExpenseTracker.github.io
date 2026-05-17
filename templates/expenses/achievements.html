@@ -1,0 +1,156 @@
+{% extends "expenses/base.html" %}
+
+{% block content %}
+<!-- Google Fonts for the Aesthetic Look -->
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Outfit:wght@600;800&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+    /* 1. Header: Lavender to Pink Gradient */
+    .achievements-header {
+        background: linear-gradient(135deg, #be185d, #db2777); 
+        color: white;
+        padding: 50px 20px;
+        border-radius: 0 0 50px 50px;
+        text-align: center;
+        margin-bottom: 30px;
+        box-shadow: 0 10px 30px rgba(190, 24, 93, 0.2);
+    }
+
+    .achievements-header h1 {
+        font-family: 'Dancing Script', cursive;
+        font-size: 48px;
+        margin-bottom: 10px;
+    }
+
+    .achievements-header p {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 18px;
+        opacity: 0.9;
+    }
+
+    /* 2. Score Box: Soft Lavender Background */
+    .score-box {
+        background: #fdf2f8; /* Very soft pink/lavender */
+        padding: 25px;
+        border-radius: 20px;
+        margin: 20px;
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        text-align: center;
+        border: 1px solid #fbcfe8;
+    }
+
+    .score-item h3 { 
+        margin: 5px 0; 
+        font-size: 28px; 
+        font-family: 'Outfit', sans-serif;
+        color: #000000; /* Pure Black for readability */
+    }
+
+    .score-item small { 
+        font-weight: 700; 
+        color: #be185d; 
+        text-transform: uppercase; 
+        letter-spacing: 1.5px; 
+        font-size: 12px;
+    }
+
+    /* 3. Badge Grid & Cards */
+    .badge-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 25px;
+        padding: 20px;
+    }
+
+    .card-badge {
+        background: white;
+        border-radius: 25px;
+        padding: 35px;
+        text-align: center;
+        box-shadow: 0 10px 20px rgba(190, 24, 93, 0.05);
+        border: 2px solid #fce7f3;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        animation: popUp 0.6s ease;
+    }
+
+    .card-badge:hover {
+        border-color: #ffd700; /* Gold Border on Hover */
+        transform: translateY(-12px);
+        box-shadow: 0 15px 30px rgba(190, 24, 93, 0.1);
+    }
+
+    .badge-icon { 
+        font-size: 65px; 
+        margin-bottom: 20px; 
+        display: block; 
+        filter: drop-shadow(0 5px 10px rgba(0,0,0,0.1));
+    }
+
+    .card-badge h3 {
+        font-family: 'Outfit', sans-serif;
+        color: #000000;
+        font-size: 22px;
+        margin-bottom: 10px;
+    }
+
+    .card-badge p {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        color: #64748b;
+        font-size: 14px;
+        line-height: 1.6;
+    }
+    
+    @keyframes popUp {
+        0% { transform: scale(0.8); opacity: 0; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+</style>
+
+<div class="achievements-header">
+    <h1>Your Financial Rewarder</h1>
+    <p>Let's get your savings game started!</p>
+</div>
+
+<div class="score-box">
+    <div class="score-item">
+        <small>This Week</small>
+        <h3>{{ user_symbol }}{{ current_week }}</h3>
+    </div>
+    <div style="border-left: 2px solid #f9a8d4; height: 45px; opacity: 0.6;"></div>
+    <div class="score-item">
+        <small>Last Week</small>
+        <h3>{{ user_symbol }}{{ last_week }}</h3>
+    </div>
+</div>
+
+<div class="badge-grid">
+    {% for badge in badges %}
+    <div class="card-badge">
+        <span class="badge-icon">{{ badge.icon }}</span>
+        <h3>{{ badge.name }}</h3>
+        <p>{{ badge.desc }}</p>
+    </div>
+    {% empty %}
+    <div class="card-badge" style="grid-column: 1/-1; opacity: 0.8; border-style: dashed;">
+        <span class="badge-icon">🔒</span>
+        <h3>No Badges Yet</h3>
+        <p>Keep tracking your expenses in {{ user_symbol }} to unlock rewards!</p>
+    </div>
+    {% endfor %}
+</div>
+
+<audio id="successSound" src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3"></audio>
+
+<script>
+    window.onload = function() {
+        const badgeCount = {{ badges|length }};
+        if (badgeCount > 0) {
+            const sound = document.getElementById('successSound');
+            sound.play().catch(e => console.log("Sound played successfully."));
+        }
+    }
+</script>
+
+{% endblock %}

@@ -1,0 +1,98 @@
+{% extends "expenses/base.html" %}
+{% load static %}
+
+{% block content %}
+<style>
+    html, body { overflow-x: hidden !important; }
+    
+    .home-container {
+        width: 100%;
+        min-height: calc(100vh - 70px);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+        text-align: center;
+        box-sizing: border-box;
+    }
+
+    .main-img {
+        width: 300px; /* Adjust size as needed */
+        height: auto;
+        margin-bottom: 20px;
+    }
+
+    .home-container h1 {
+        font-size: 38px;
+        margin-bottom: 10px;
+        color: #1a73e8;
+        font-weight: 700;
+    }
+
+    .home-container p {
+        font-size: 18px;
+        color: #555;
+        margin-bottom: 30px;
+        max-width: 600px;
+    }
+
+    .home-buttons {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-top: 10px;
+    }
+
+    .btn-simple {
+        padding: 12px 30px;
+        border-radius: 8px;
+        color: white;
+        font-weight: 600;
+        text-decoration: none;
+        transition: 0.3s;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    .btn-login { background: #1a73e8; }
+    .btn-register { background: #28a745; }
+    .btn-dashboard { background: #1a73e8; }
+    .btn-add { background: #28a745; }
+
+    .btn-simple:hover {
+        transform: translateY(-3px);
+        opacity: 0.9;
+        box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+    }
+</style>
+
+<div class="home-container">
+    <img src="{% static 'images/mainimage1.png' %}" alt="Expense Tracker Logo" class="main-img">
+
+    {% if user.is_authenticated %}
+        <h1>Welcome Back, {{ user.username }}!</h1>
+        <p>Ready to manage your finances? Check your dashboard to see your spending insights.</p>
+        
+        <div class="home-buttons">
+            <a href="{% url 'dashboard' %}" class="btn-simple btn-dashboard">
+                <i class="fa-solid fa-chart-line"></i> View Dashboard
+            </a>
+            <a href="{% url 'add_expense' %}" class="btn-simple btn-add">
+                <i class="fa-solid fa-plus"></i> Add New Expense
+            </a>
+        </div>
+    {% else %}
+        <h1>Smart Expense Tracking</h1>
+        <p>Take control of your money. Track your daily expenses, analyze your spending habits, and save more for the future.</p>
+        
+        <div class="home-buttons">
+            <a href="{% url 'login' %}" class="btn-simple btn-login">Login Now</a>
+            <a href="{% url 'register' %}" class="btn-simple btn-register">Create Account</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

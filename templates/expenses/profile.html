@@ -1,0 +1,220 @@
+{% extends "expenses/base.html" %}
+{% block content %}
+
+<!-- Fonts Integration -->
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Outfit:wght@600;700&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+    /* Main Background */
+    body { background: #fdf2f8; font-family: 'Plus Jakarta Sans', sans-serif; }
+
+    .profile-card {
+        max-width: 850px; 
+        margin: 40px auto; 
+        background: white; 
+        padding: 45px; 
+        border-radius: 30px; 
+        box-shadow: 0 20px 40px rgba(190, 24, 93, 0.08); 
+        border: 1px solid #fce7f3;
+    }
+
+    /* Header Styling */
+    .header-icon {
+        background: #fdf2f8; 
+        width: 75px; 
+        height: 75px; 
+        border-radius: 50%; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        margin: 0 auto 15px;
+        border: 2px solid #fbcfe8;
+    }
+    
+    .profile-card h2 {
+        font-family: 'Dancing Script', cursive;
+        color: #000; 
+        font-size: 38px;
+        margin: 0; 
+        font-weight: 800;
+    }
+
+    /* Section Headings */
+    .section-title {
+        color: #be185d; 
+        font-size: 14px; 
+        border-bottom: 2px solid #fdf2f8; 
+        padding-bottom: 10px; 
+        margin-top: 40px; 
+        margin-bottom: 25px; 
+        font-weight: 700; 
+        text-transform: uppercase; 
+        letter-spacing: 1.5px;
+        font-family: 'Outfit', sans-serif;
+    }
+
+    /* Form Elements */
+    label {
+        font-weight: 700; 
+        font-size: 11px; 
+        color: #94a3b8; 
+        letter-spacing: 0.5px; 
+        text-transform: uppercase;
+        display: block;
+        margin-bottom: 8px;
+    }
+
+    input, select, textarea {
+        width: 100%; 
+        padding: 14px; 
+        border: 2px solid #f3f4f6; 
+        border-radius: 12px; 
+        margin-top: 5px; 
+        outline: none;
+        transition: 0.3s;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        color: #000;
+    }
+
+    input:focus, select:focus, textarea:focus {
+        border-color: #be185d;
+        background: #fff;
+        box-shadow: 0 0 0 4px rgba(190, 24, 93, 0.05);
+    }
+
+    .grid-row { display: grid; gap: 25px; margin-bottom: 25px; }
+    .grid-2 { grid-template-columns: 1fr 1fr; }
+    .grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+    /* Submit Button - The Gold/Black Look */
+    .btn-sync {
+        background: #000; 
+        color: white; 
+        border: none; 
+        padding: 18px; 
+        border-radius: 16px; 
+        font-weight: 700; 
+        font-size: 16px; 
+        cursor: pointer; 
+        width: 100%; 
+        transition: all 0.4s ease; 
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        font-family: 'Outfit', sans-serif;
+        letter-spacing: 1px;
+    }
+
+    .btn-sync:hover {
+        background: #be185d; /* Changes to signature pink */
+        transform: translateY(-3px);
+        box-shadow: 0 15px 25px rgba(190, 24, 93, 0.2);
+    }
+
+    #currency-symbol {
+        position: absolute; 
+        left: 14px; 
+        top: 22px; 
+        color: #be185d; 
+        font-weight: 700;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .grid-2, .grid-3 { grid-template-columns: 1fr; }
+        .profile-card { padding: 25px; margin: 20px; }
+    }
+</style>
+
+<div class="profile-card">
+    
+    <div style="text-align: center; margin-bottom: 40px;">
+        <div class="header-icon">
+            <i class="fa-solid fa-user-shield" style="color: #be185d; font-size: 28px;"></i>
+        </div>
+        <h2>Financial Identity</h2>
+        <p style="color: #64748b; font-size: 14px; margin-top: 5px;">Update details to personalize your theme and dashboard</p>
+    </div>
+    
+    <form method="POST">
+        {% csrf_token %}
+        
+        <!-- SECTION 1: PERSONAL DETAILS -->
+        <h4 class="section-title">
+            <i class="fa-solid fa-address-card" style="margin-right: 8px;"></i> Personal Details
+        </h4>
+        
+        <div class="grid-row grid-2">
+            <div>
+                <label>First Name</label>
+                <input type="text" name="first_name" value="{{ user.first_name }}" placeholder="Enter first name">
+            </div>
+            <div>
+                <label>Last Name</label>
+                <input type="text" name="last_name" value="{{ user.last_name }}" placeholder="Enter last name">
+            </div>
+        </div>
+
+        <div class="grid-row grid-3">
+            <div>
+                <label>Age</label>
+                <input type="number" name="age" value="{{ profile.age }}" placeholder="Years">
+            </div>
+            <div>
+                <label>Occupation</label>
+                <input type="text" name="occupation" value="{{ profile.occupation }}" placeholder="e.g. Developer">
+            </div>
+        </div>
+
+        <!-- SECTION 2: LOCATION & FINANCE -->
+        <h4 class="section-title">
+            <i class="fa-solid fa-earth-americas" style="margin-right: 8px;"></i> Location & Finance
+        </h4>
+
+        <div class="grid-row grid-2">
+            <div>
+                <label>Country</label>
+                <select name="country" id="country-select" onchange="updateSymbol(this.value)" style="background: white;">
+                    <option value="INDIA" {% if profile.country|upper == "INDIA" %}selected{% endif %}>India (INR)</option>
+                    <option value="USA" {% if profile.country|upper == "USA" %}selected{% endif %}>USA (USD)</option>
+                    <option value="UK" {% if profile.country|upper == "UK" %}selected{% endif %}>UK (GBP)</option>
+                    <option value="EUROPE" {% if profile.country|upper == "EUROPE" %}selected{% endif %}>Europe (EUR)</option>
+                    <option value="JAPAN" {% if profile.country|upper == "JAPAN" %}selected{% endif %}>Japan (JPY)</option>
+                </select>
+            </div>
+            <div>
+                <label>Monthly Income</label>
+                <div style="position: relative;">
+                    <span id="currency-symbol">
+                        {{ user_symbol|default:'₹' }}
+                    </span>
+                    <input type="number" name="income" value="{{ profile.monthly_income }}" step="0.01" style="padding-left: 35px; font-weight: 700;">
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 35px;">
+            <label>Permanent Address</label>
+            <textarea name="address" rows="3" placeholder="Full address..." style="resize: none;">{{ profile.address }}</textarea>
+        </div>
+
+        <button type="submit" class="btn-sync">
+            <i class="fa-solid fa-cloud-arrow-up" style="margin-right: 8px;"></i> Save & Sync Account
+        </button>
+    </form>
+</div>
+
+<script>
+    function updateSymbol(countryValue) {
+        const symbols = {
+            'INDIA': '₹',
+            'USA': '$',
+            'UK': '£',
+            'EUROPE': '€',
+            'JAPAN': '¥'
+        };
+        const symbolDisplay = document.getElementById('currency-symbol');
+        if (symbols[countryValue]) {
+            symbolDisplay.innerText = symbols[countryValue];
+        }
+    }
+</script>
+{% endblock %}

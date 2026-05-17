@@ -1,0 +1,146 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Tracker</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <style>
+        :root {
+            --primary-pink: #be185d;
+            --text-dark: #1e293b;
+            --text-muted: #64748b;
+        }
+
+        body { 
+            margin: 0; 
+            font-family: 'Inter', sans-serif; 
+            background: #f8fafc; 
+            color: var(--text-dark);
+        }
+
+        /* --- NAVBAR --- */
+        .navbar { 
+            background: white; 
+            padding: 0.8rem 6%; 
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            position: sticky; top: 0; z-index: 1000;
+        }
+
+        /* Logo: Pink & Stylish */
+        .brand { 
+            font-family: 'Pacifico', cursive; 
+            font-size: 26px; 
+            color: var(--primary-pink); 
+            text-decoration: none; 
+        }
+
+        .nav-links { display: flex; gap: 25px; align-items: center; }
+        .nav-links a { 
+            text-decoration: none; 
+            color: var(--text-muted); 
+            font-size: 14px; 
+            font-weight: 500; 
+            display: flex; align-items: center; gap: 6px;
+            position: relative;
+        }
+        .nav-links a:hover { color: var(--primary-pink); }
+
+        /* --- HOVER MESSAGES (TIMES NEW ROMAN) --- */
+        [data-tooltip]:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            top: 155%; left: 50%;
+            transform: translateX(-50%);
+            
+            /* Aapki choice ka font */
+            font-family: 'Times New Roman', Times, serif; 
+            font-size: 15px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            color: white;
+            
+            background: #1e293b;
+            padding: 6px 14px;
+            border-radius: 6px;
+            white-space: nowrap;
+            z-index: 2000;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateX(-50%) translateY(3px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+
+        /* --- PINK PIGGY ICON --- */
+        .fab-budget {
+            position: fixed; right: 30px; top: 50%;
+            transform: translateY(-50%);
+            width: 60px; height: 60px;
+            background: var(--primary-pink);
+            color: white !important;
+            border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px; 
+            box-shadow: 0 8px 20px rgba(190, 24, 93, 0.4);
+            text-decoration: none; 
+            z-index: 2000; 
+            transition: 0.3s;
+        }
+        .fab-budget:hover { transform: translateY(-50%) scale(1.1); }
+
+        /* Logout Pill */
+        .logout-btn { 
+            border: 1px solid #fecaca; background: #fff1f2; 
+            color: #e11d48; padding: 6px 18px; border-radius: 20px;
+            font-weight: 600; font-size: 13px; cursor: pointer;
+        }
+        .logout-btn:hover { background: #e11d48; color: white; }
+
+        .main-content { padding: 25px 6%; min-height: 80vh; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="/" class="brand">ExpenseTracker</a>
+        
+        <div class="nav-links">
+            {% if user.is_authenticated %}
+                <a href="{% url 'homelogged' %}" data-tooltip="Dashboard✨"><i class="fa-solid fa-house"></i> Home</a>
+                <a href="{% url 'achievements' %}" data-tooltip="Rewards🏆" style="color:#db2777"><i class="fa-solid fa-trophy"></i> Rewards</a>
+                <a href="{% url 'profile' %}" data-tooltip="Profile👤"><i class="fa-solid fa-user-circle"></i> Profile</a>
+                
+                <div class="logout-wrapper" data-tooltip="See you soon!👋">
+                    <form action="{% url 'logout' %}" method="post" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="logout-btn">Logout</button>
+                    </form>
+                </div>
+            {% endif %}
+        </div>
+    </nav>
+
+    {% if user.is_authenticated %}
+    <a href="{% url 'set_budget' %}" class="fab-budget" data-tooltip="Set Budget 💰">
+        <i class="fa-solid fa-piggy-bank"></i>
+    </a>
+    {% endif %}
+
+    <div class="main-content">
+        {% block content %}{% endblock %}
+    </div>
+
+</body>
+</html>

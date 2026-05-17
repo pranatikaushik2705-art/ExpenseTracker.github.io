@@ -1,0 +1,138 @@
+{% extends "expenses/base.html" %}
+{% block content %}
+
+<!-- Fonts Integration -->
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Outfit:wght@600;700&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+    body { background: #fdf2f8; font-family: 'Plus Jakarta Sans', sans-serif; }
+    
+    .list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; margin-top: 20px; }
+    .list-header h2 { 
+        color: #000; 
+        font-family: 'Dancing Script', cursive; 
+        font-weight: 700; 
+        margin: 0; 
+        font-size: 35px; 
+    }
+
+    /* Summary Mini-Cards: Lavender Theme */
+    .summary-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
+    .mini-box { 
+        background: white; 
+        padding: 15px 20px; 
+        border-radius: 15px; 
+        box-shadow: 0 4px 15px rgba(190, 24, 93, 0.05); 
+        border-left: 5px solid #be185d; 
+    }
+    .mini-box span { font-size: 11px; color: #be185d; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+    .mini-box div { font-size: 22px; font-weight: 800; color: #000; font-family: 'Outfit', sans-serif; }
+
+    /* Modern Table Styling: Pink Accents */
+    .table-container { 
+        background: white; 
+        border-radius: 20px; 
+        box-shadow: 0 10px 25px rgba(190, 24, 93, 0.05); 
+        overflow: hidden; 
+        border: 1px solid #fce7f3; 
+    }
+    .table { margin-bottom: 0; width: 100%; border-collapse: collapse; }
+    .table thead { background: linear-gradient(90deg, #be185d, #db2777); color: white; }
+    .table th { padding: 18px 20px; text-align: left; font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .table td { padding: 16px 20px; border-bottom: 1px solid #fdf2f8; font-size: 14px; color: #334155; }
+    .table tbody tr:hover { background-color: #fdf2f8; transition: 0.3s; }
+
+    /* Badges & Buttons */
+    .badge-cat { 
+        padding: 6px 14px; 
+        border-radius: 20px; 
+        font-size: 11px; 
+        font-weight: 700; 
+        background: #fce7f3; 
+        color: #be185d; 
+        border: 1px solid #f9a8d4;
+    }
+    .btn-add { 
+        background: #000; 
+        color: white; 
+        padding: 12px 25px; 
+        border-radius: 12px; 
+        text-decoration: none; 
+        font-size: 14px; 
+        font-weight: 700; 
+        transition: 0.3s; 
+        font-family: 'Outfit', sans-serif;
+    }
+    .btn-add:hover { background: #be185d; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(190, 24, 93, 0.2); }
+
+    /* Bin Button Styling */
+    .bin-btn { 
+        background: none; 
+        border: none; 
+        color: #ef4444; 
+        cursor: pointer; 
+        font-size: 20px; 
+        padding: 8px; 
+        border-radius: 10px; 
+        transition: 0.3s; 
+    }
+    .bin-btn:hover { background: #fee2e2; transform: scale(1.2); }
+    
+    .amount-tag { color: #000; font-family: 'Outfit', sans-serif; font-size: 16px; }
+</style>
+
+<div class="container">
+    <div class="list-header">
+        <h2>Expense History</h2>
+        <a href="/add/" class="btn-add">+ New Entry</a>
+    </div>
+
+    <div class="summary-strip">
+        <div class="mini-box">
+            <span>Total Transactions</span>
+            <div>{{ expenses.count }}</div>
+        </div>
+        <div class="mini-box">
+            <span>Quick View</span>
+            <div>All Records</div>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Amount</th>
+                    <th>Category</th>
+                    <th>Date</th>
+                    <th>Description</th>
+                    <th style="text-align: center;">Action</th> 
+                </tr>
+            </thead>
+            <tbody>
+                {% for expense in expenses %}
+                <tr>
+                    <td class="amount-tag"><strong>₹{{ expense.amount }}</strong></td>
+                    <td><span class="badge-cat">{{ expense.category }}</span></td>
+                    <td style="color: #64748b; font-weight: 600;">{{ expense.date|date:"d M Y" }}</td>
+                    <td style="font-style: italic; color: #475569;">{{ expense.description|default:"—" }}</td>
+                    
+                    <td style="text-align: center;">
+                        <form action="{% url 'expense_delete' %}" method="POST" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="expense_id" value="{{ expense.id }}">
+                            <button type="submit" class="bin-btn" title="Delete">
+                                🗑️
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" style="text-align: center; padding: 50px; color: #94a3b8; font-style: italic;">No expenses recorded yet. Start by adding one!</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

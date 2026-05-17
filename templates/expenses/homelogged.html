@@ -1,0 +1,129 @@
+{% extends "expenses/base.html" %}
+{% load static %}
+{% block content %}
+
+<!-- Google Fonts & Icons -->
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Outfit:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+    :root {
+        --primary: #be185d;
+        --text-dark: #000000;
+        --card-bg: rgba(255, 255, 255, 0.6);
+    }
+
+    body {
+        background: radial-gradient(circle at top, #fdf2f8, #fbcfe8, #f9a8d4);
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        min-height: 100vh;
+        margin: 0;
+    }
+
+    .home-wrapper { max-width: 1100px; margin: 0 auto; padding: 40px 25px; }
+
+    /* HERO SECTION */
+    .hero-section { text-align: center; margin-bottom: 40px; }
+    .hero-section h1 { font-family: 'Dancing Script', cursive; font-size: 50px; font-weight: 800; color: var(--text-dark); margin: 0; }
+    .hero-section p { font-family: 'Times New Roman', serif; font-size: 19px; color: #4b5563; margin-top: 5px; }
+
+    /* GRID LAYOUT */
+    .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
+    
+    .image-card {
+        position: relative; height: 260px; border-radius: 28px; overflow: hidden;
+        text-decoration: none; display: flex; flex-direction: column; justify-content: flex-end;
+        padding: 25px; transition: all 0.5s cubic-bezier(0.2, 1, 0.3, 1);
+        border: 1px solid rgba(251, 207, 232, 0.5);
+        box-shadow: 0 10px 25px rgba(190, 24, 93, 0.1);
+    }
+    .card-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; transition: 0.5s; z-index: 1; }
+    .card-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(to bottom, transparent 0%, rgba(131, 24, 67, 0.85) 100%); z-index: 2; }
+    .card-content { position: relative; z-index: 3; color: white; }
+    .card-title { font-family: 'Outfit'; font-size: 22px; font-weight: 700; }
+
+    .image-card:hover { transform: translateY(-10px); }
+    .image-card:hover .card-bg { transform: scale(1.1); }
+
+    /* NEWS SECTION */
+    .news-section { margin-top: 50px; }
+    .news-header { font-family: 'Dancing Script', cursive; font-size: 35px; color: var(--primary); margin-bottom: 25px; display: flex; align-items: center; gap: 12px; }
+    
+    .news-card {
+        background: var(--card-bg); backdrop-filter: blur(12px);
+        padding: 18px; border-radius: 22px; border: 1px solid rgba(251, 207, 232, 0.8);
+        display: flex; gap: 20px; text-decoration: none; transition: 0.3s; align-items: center;
+        margin-bottom: 15px;
+    }
+    .news-card:hover { background: white; transform: scale(1.01); box-shadow: 0 10px 20px rgba(190, 24, 93, 0.1); }
+    
+    .news-image { 
+        width: 110px; height: 85px; border-radius: 15px; 
+        object-fit: cover; flex-shrink: 0; background: #fbcfe8;
+        border: 1px solid rgba(190, 24, 93, 0.1);
+    }
+    .news-info h4 { margin: 0; font-family: 'Outfit', sans-serif; color: #000; font-size: 17px; line-height: 1.3; font-weight: 700; }
+    .news-info p { margin: 5px 0 0; font-size: 13px; color: #64748b; }
+</style>
+
+<div class="home-wrapper">
+    <div class="hero-section">
+        <h1>Hello, Pranati!</h1>
+        <p>Your finances are organized, analyzed, and optimized.</p>
+    </div>
+
+    <div class="feature-grid">
+        <a href="{% url 'expense_list' %}" class="image-card">
+            <div class="card-bg" style="background-image: url('{% static 'images/expense.jpg' %}');"></div>
+            <div class="card-overlay"></div>
+            <div class="card-content">
+                <div class="card-title"><i class="fa-solid fa-receipt"></i> Expenses</div>
+            </div>
+        </a>
+        <a href="{% url 'wishlist' %}" class="image-card">
+            <div class="card-bg" style="background-image: url('{% static 'images/wishlist.jpg' %}');"></div>
+            <div class="card-overlay"></div>
+            <div class="card-content">
+                <div class="card-title"><i class="fa-solid fa-wand-magic-sparkles"></i> Wishlist</div>
+            </div>
+        </a>
+        <a href="{% url 'dashboard' %}" class="image-card">
+            <div class="card-bg" style="background-image: url('{% static 'images/analytics.jpg' %}');"></div>
+            <div class="card-overlay"></div>
+            <div class="card-content">
+                <div class="card-title"><i class="fa-solid fa-chart-column"></i> Analytics</div>
+            </div>
+        </a>
+        <a href="{% url 'planner' %}" class="image-card">
+            <div class="card-bg" style="background-image: url('{% static 'images/planner.jpg' %}');"></div>
+            <div class="card-overlay"></div>
+            <div class="card-content">
+                <div class="card-title"><i class="fa-solid fa-brain"></i> Planner</div>
+            </div>
+        </a>
+    </div>
+
+    <div class="news-section">
+        <div class="news-header"><i class="fa-solid fa-bolt"></i> Market Pulse</div>
+        <div class="news-container">
+            {% for article in news_articles %}
+                <a href="{{ article.url }}" target="_blank" class="news-card">
+                    <!-- IMAGE PROXY + UNIQUE FALLBACK SEED -->
+                    <img src="{% if article.urlToImage %}https://images.weserv.nl/?url={{ article.urlToImage|urlencode }}{% else %}https://picsum.photos/seed/money{{ forloop.counter }}/400/300{% endif %}" 
+                         class="news-image" 
+                         alt="news"
+                         onerror="this.onerror=null; this.src='https://picsum.photos/seed/finance{{ forloop.counter }}/400/300';">
+                    
+                    <div class="news-info">
+                        <span style="font-size: 10px; color: var(--primary); font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">
+                            {{ article.source.name }}
+                        </span>
+                        <h4>{{ article.title|truncatechars:70 }}</h4>
+                        <p>Tap to read the full story</p>
+                    </div>
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

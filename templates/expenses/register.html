@@ -1,0 +1,180 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Register - Expense Tracker</title>
+
+<!-- Fonts & Icons -->
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<script type="module" src="{% static 'js/firebase.js' %}"></script>
+
+<script type="module">
+import { auth, createUserWithEmailAndPassword } from "{% static 'js/firebase.js' %}";
+
+window.registerUser = async function(event) {
+    event.preventDefault(); 
+
+    const fullName = document.getElementsByName("username")[0].value;
+    const email = document.getElementsByName("email")[0].value.trim();
+    const pass1 = document.getElementsByName("password")[0].value;
+    const pass2 = document.getElementsByName("password2")[0].value;
+
+    if (pass1 !== pass2) {
+        alert("Passwords do not match!");
+        return;
+    }
+
+    try {
+        console.log("Creating user in Firebase...");
+        const userCredential = await createUserWithEmailAndPassword(auth, email, pass1);
+        console.log("Firebase Auth Success!");
+        document.getElementById("regForm").submit();
+
+    } catch (error) {
+        console.error("Firebase Error:", error.code);
+        if (error.code === 'auth/email-already-in-use') {
+            alert("Ye Email pehle se registered hai!");
+        } else {
+            alert("Firebase Error: " + error.message);
+        }
+    }
+}
+</script>
+
+<style>
+    body { 
+        margin: 0; padding: 0; 
+        font-family: 'Inter', sans-serif; 
+        background: radial-gradient(circle at top, #fdf2f8, #fbcfe8, #f9a8d4); 
+        height: 100vh; display: flex; justify-content: center; align-items: center; 
+        perspective: 1200px; 
+    }
+
+    .container { 
+        width: 850px; height: 550px; display: flex; background: white; 
+        border-radius: 20px; overflow: hidden; 
+        box-shadow: 0 15px 35px rgba(190, 24, 93, 0.2); 
+        border: 1px solid #fbcfe8; 
+    }
+
+    /* LEFT BOX: Form Section */
+    .left-box { 
+        width: 50%; padding: 35px 40px; display: flex; flex-direction: column; 
+        justify-content: flex-start; background: #fff; 
+    }
+
+    .left-box h2 { 
+        text-align: center; 
+        color: #be185d; 
+        margin-bottom: 20px; 
+        font-size: 36px; 
+        font-family: 'Dancing Script', cursive; 
+    }
+
+    .input-group { margin-bottom: 10px; display: flex; flex-direction: column; }
+    
+    .input-group label {
+        font-family: 'Times New Roman', Times, serif;
+        font-size: 13px; color: #64748b; margin-bottom: 4px; font-weight: bold;
+        padding-left: 10%;
+    }
+
+    input { 
+        width: 80%; padding: 11px; border-radius: 10px; 
+        border: 1px solid #f9a8d4; background: #fff5f8; color: #831843; 
+        font-size: 14px; align-self: center; outline: none; transition: 0.2s; 
+    }
+
+    input:focus { 
+        border-color: #be185d; 
+        box-shadow: 0 0 8px rgba(190, 24, 93, 0.2); 
+        background: #fff; 
+    }
+
+    button { 
+        width: 80%; background: #be185d; 
+        padding: 13px; border: none; border-radius: 10px; color: white; 
+        font-size: 16px; margin-top: 15px; cursor: pointer; align-self: center; 
+        font-weight: 600; transition: 0.3s; 
+        box-shadow: 0 6px 18px rgba(190, 24, 93, 0.3); 
+    }
+
+    button:hover { 
+        background: #9d174d; transform: scale(1.02); 
+    }
+
+    .login-footer {
+        text-align: center; margin-top: 15px;
+        font-family: 'Times New Roman', Times, serif;
+        font-size: 15px; color: #64748b;
+    }
+
+    .login-footer a { color: #be185d; font-weight: bold; text-decoration: none; }
+    .login-footer a:hover { text-decoration: underline; }
+
+    /* RIGHT BOX: Branding Section */
+    .right-box { 
+        width: 50%; 
+        background: linear-gradient(135deg, #be185d 0%, #9d174d 100%); 
+        display: flex; flex-direction: column; justify-content: center; 
+        padding: 40px; color: white; text-align: center; 
+    }
+
+    .right-box h1 { 
+        font-family: 'Dancing Script', cursive; 
+        font-size: 45px; margin-bottom: 15px; 
+    }
+
+    .right-box p { 
+        font-family: 'Times New Roman', Times, serif; 
+        font-size: 19px; opacity: 0.9; line-height: 1.5;
+    }
+</style>
+</head>
+
+<body>
+<div class="container">
+    <form id="regForm" class="left-box" method="POST">
+        {% csrf_token %}
+        <h2>Create Account</h2>
+        
+        <div class="input-group">
+            <label>Full Name</label>
+            <input type="text" name="username" placeholder="e.g. Prana" required>
+        </div>
+
+        <div class="input-group">
+            <label>Email Address</label>
+            <input type="email" name="email" placeholder="e.g. name@example.com" required>
+        </div>
+
+        <div class="input-group">
+            <label>Password</label>
+            <input type="password" name="password" placeholder="••••••••" required>
+        </div>
+
+        <div class="input-group">
+            <label>Confirm Password</label>
+            <input type="password" name="password2" placeholder="••••••••" required>
+        </div>
+
+        <button type="button" onclick="registerUser(event)">Register Now</button>
+
+        <p class="login-footer">
+            Already have an account? <a href="{% url 'login' %}">Login</a>
+        </p>
+    </form>
+
+    <div class="right-box">
+        <h1>Welcome Aboard</h1>
+        <p>Take control of your finances today.<br>Track every penny and grow your savings with ease.</p>
+        <div style="font-size: 60px; margin-top: 25px; opacity: 0.8;">
+            <i class="fa-solid fa-chart-line"></i>
+        </div>
+    </div>
+</div>
+</body>
+</html>
